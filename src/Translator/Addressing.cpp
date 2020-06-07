@@ -33,10 +33,18 @@ struct eff_addrNS_t
 
 
 inline
+bool is_power_of2(int a)
+{
+	return (a & (a - 1)) == 0;
+}
+
+
+inline
 bool is_byte(int a)
 {
 	return a >= -128 && a <= 127;
 }
+
 
 #define EMPTY -1
 // a.scale >> 1
@@ -53,7 +61,6 @@ eff_addr_t make_operands(addrn86_t a)
 	};
 	constexpr auto modrm_sz = sizeof(eff_addrS_t::modrm_b);
 	constexpr auto sib_sz = sizeof(eff_addrS_t::sib_b);
-
 	if (a.ref)
 	{
 		bool sib = false;
@@ -79,7 +86,21 @@ eff_addr_t make_operands(addrn86_t a)
 			// 	eas.sib_b = BASE_BITS(0b101);
 			sib = true;
 		}
+
+#ifdef _DEBUG
+		// check scale
+		switch (a.scale)
+		{
+			case 1: case 2: case 4: case 8:
+				eas.sib_b |= SCALE_BITS(scale_table[a.scale >> 1]) | INDEX_BITS(static_cast<int>(a.index));
+				break;
+			default:
+				assert(false);
+		}
+#else
 		eas.sib_b |= SCALE_BITS(scale_table[a.scale >> 1]) | INDEX_BITS(static_cast<int>(a.index));
+#endif
+
 		// MOD = 00 && EBP(move EBP to MOD 01)
 		if (!a.dp
 			|| a.dst == x86Reg::None)	// if no displacement
@@ -88,7 +109,7 @@ eff_addr_t make_operands(addrn86_t a)
 			{
 				case x86Reg::ESP:
 					assert(a.scale == 1);
-					ea.len += sib_sz; 
+					ea.len += sib_sz;
 
 				case x86Reg::EAX:
 				case x86Reg::ECX:
@@ -117,7 +138,7 @@ eff_addr_t make_operands(addrn86_t a)
 						eans.modrm_b = MODRM_BYTE(0b01, static_cast<int>(a.src), static_cast<int>(a.index));
 						eans.disp32 = 0;
 						ea.len += sizeof(byte_t);
-					 }
+					}
 					return ea;
 				}
 				case x86Reg::None: // displacement only
@@ -166,6 +187,7 @@ eff_addr_t make_operands(addrn86_t a)
 	else
 	{
 		eans.modrm_b = MODRM_BYTE(0b11, static_cast<int>(a.src), static_cast<int>(a.dst));
+		ea.len += 1;
 		return ea;
 	}
 }

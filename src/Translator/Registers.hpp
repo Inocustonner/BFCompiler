@@ -14,14 +14,30 @@ enum class Register
 	None = -1,
 };
 
+enum class RefSize
+{
+	Byte = 1,
+	Word = 2,
+	Dword = 4,
+	Qword = 8,
+
+	None = -1
+};
 
 struct addrn_t
 {
 	Register base = Register::None;
-	Register index;
+	union
+	{
+		Register index;
+		Register dst;
+	};
 	int scale = 1;
 	int disp;
 
+
 	bool ref = false;
 	bool dp = false;			// is displacement presented
+
+	RefSize ref_size = RefSize::None;
 };

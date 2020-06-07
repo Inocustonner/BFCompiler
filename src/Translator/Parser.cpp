@@ -39,6 +39,7 @@ Ast_Ptr Parser::parseLoop() noexcept
 	{
 		ast_p->body.push_back(parseSingle());
 	}
+	consume(); // consume LoopEnd
 	return ast_p;
 }
 

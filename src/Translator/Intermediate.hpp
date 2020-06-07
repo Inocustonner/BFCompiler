@@ -37,10 +37,10 @@ struct INode;
 // if disp == -1 it is not specified
 // if scale == 0 index is not specified
 
-
 struct Operand
 {
 	Operand_Type type;
+	RefSize size = RefSize::None; // for intermediate
 	union
 	{
 		addrn_t addrn;
